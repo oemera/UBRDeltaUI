@@ -26,17 +26,17 @@ public protocol DeltaTableViewHeaderFooterItem : ComparableItem {
 
 
 public protocol UpdateableTableViewCell : class {
-    func updateCellWithItem(item: ComparableItem, animated: Bool)
+    func updateCellWithItem(_ item: ComparableItem, animated: Bool)
 }
 
 
 public protocol UpdateableTableViewHeaderFooterView : class {
-    func updateViewWithItem(item: ComparableItem, animated: Bool, type: HeaderFooterType)
+    func updateViewWithItem(_ item: ComparableItem, animated: Bool, type: HeaderFooterType)
 }
 
 
 public enum HeaderFooterType {
-    case Header, Footer
+    case header, footer
 }
 
 
@@ -46,7 +46,7 @@ public protocol SelectableTableViewItem {
 
 
 /// A helper function to avoid reference cycles in action handler
-public func weakActionHandler<Target: AnyObject, Result>(target: Target, handler: (Target) -> ((Result) -> Void)) -> ((Result) -> Void) {
+public func weakActionHandler<Target: AnyObject, Result>(_ target: Target, handler: @escaping (Target) -> ((Result) -> Void)) -> ((Result) -> Void) {
     return { [weak target] result in
         guard let t = target else { return }
         handler(t)(result)
@@ -55,7 +55,7 @@ public func weakActionHandler<Target: AnyObject, Result>(target: Target, handler
 
 
 /// A helper function to avoid reference cycles in action handler
-public func weakActionHandler<Target: AnyObject>(target: Target, handler: (Target) -> (() -> Void)) -> (() -> Void) {
+public func weakActionHandler<Target: AnyObject>(_ target: Target, handler: @escaping (Target) -> (() -> Void)) -> (() -> Void) {
     return { [weak target] in
         guard let t = target else { return }
         handler(t)()
@@ -65,7 +65,7 @@ public func weakActionHandler<Target: AnyObject>(target: Target, handler: (Targe
 
 /// A helper function to avoid reference cycles in action handler.
 /// This version allows to provide extra context
-public func weakActionHandler<Target: AnyObject, Context, Result>(target: Target, handler: (Target) -> ((Result, Context) -> Void), context: Context) -> ((Result) -> Void) {
+public func weakActionHandler<Target: AnyObject, Context, Result>(_ target: Target, handler: @escaping (Target) -> ((Result, Context) -> Void), context: Context) -> ((Result) -> Void) {
     return { [weak target] result in
         guard let t = target else { return }
         handler(t)(result, context)
@@ -77,7 +77,7 @@ public func weakActionHandler<Target: AnyObject, Context, Result>(target: Target
  A helper function to avoid reference cycles in action handler.
  This version allows to provide extra context, but does not take a value
  */
-public func weakActionHandler<Target: AnyObject, Context>(target: Target, handler: (Target) -> ((Context) -> Void), context: Context) -> (() -> Void) {
+public func weakActionHandler<Target: AnyObject, Context>(_ target: Target, handler: @escaping (Target) -> ((Context) -> Void), context: Context) -> (() -> Void) {
     return { [weak target] in
         guard let t = target else { return }
         handler(t)(context)

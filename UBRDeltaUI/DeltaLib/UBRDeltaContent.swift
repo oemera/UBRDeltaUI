@@ -10,10 +10,10 @@ import Foundation
 
 class UBRDeltaContent {
     
-    typealias ItemUpdateHandler = (items: [ComparableItem], section: Int, insertIndexPaths: [Int], reloadIndexPaths: [Int:Int], deleteIndexPaths: [Int]) -> ()
-    typealias ItemReorderHandler = (items: [ComparableItem], section: Int, reorderMap: [Int:Int]) -> ()
-    typealias SectionUpdateHandler = (sections: [ComparableSectionItem], insertIndexSet: [Int], reloadIndexSet: [Int:Int], deleteIndexSet: [Int]) -> ()
-    typealias SectionReorderHandler = (sections: [ComparableSectionItem], reorderMap: [Int:Int]) -> ()
+    typealias ItemUpdateHandler = (_ items: [ComparableItem], _ section: Int, _ insertIndexPaths: [Int], _ reloadIndexPaths: [Int:Int], _ deleteIndexPaths: [Int]) -> ()
+    typealias ItemReorderHandler = (_ items: [ComparableItem], _ section: Int, _ reorderMap: [Int:Int]) -> ()
+    typealias SectionUpdateHandler = (_ sections: [ComparableSectionItem], _ insertIndexSet: [Int], _ reloadIndexSet: [Int:Int], _ deleteIndexSet: [Int]) -> ()
+    typealias SectionReorderHandler = (_ sections: [ComparableSectionItem], _ reorderMap: [Int:Int]) -> ()
     typealias StartHandler = () -> ()
     typealias CompletionHandler = () -> ()
     
@@ -30,22 +30,22 @@ class UBRDeltaContent {
     var completion: CompletionHandler? = nil
     
     // State vars for background operations
-    private var isDiffing: Bool = false
-    private var resultIsOutOfDate: Bool = false
+    fileprivate var isDiffing: Bool = false
+    fileprivate var resultIsOutOfDate: Bool = false
     
     // State vars to throttle UI update
-    private var timeLockEnabled: Bool = false
-    private var lastUpdateTime: NSDate = NSDate(timeIntervalSince1970: 0)
+    fileprivate var timeLockEnabled: Bool = false
+    fileprivate var lastUpdateTime: Date = Date(timeIntervalSince1970: 0)
     
     // Section data
-    private var oldSections: [ComparableSectionItem]? = nil
-    private var newSections: [ComparableSectionItem]? = nil
+    fileprivate var oldSections: [ComparableSectionItem]? = nil
+    fileprivate var newSections: [ComparableSectionItem]? = nil
     
     
     init() {}
     
     
-    func queueComparison(oldSections oldSections: [ComparableSectionItem], newSections: [ComparableSectionItem])
+    func queueComparison(oldSections: [ComparableSectionItem], newSections: [ComparableSectionItem])
     {
         // Set Sections
         if self.oldSections == nil {
@@ -69,7 +69,7 @@ class UBRDeltaContent {
     }
     
     
-    private func diff()
+    fileprivate func diff()
     {
         // Guarding
         guard let oldSections = self.oldSections else { return }
@@ -80,17 +80,17 @@ class UBRDeltaContent {
         self.resultIsOutOfDate = false
 
         // Do the diffing on a background thread
-        let backgroundQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0)
+        let backgroundQueue = DispatchQueue.global()
 
-        dispatch_async(backgroundQueue) {
+        backgroundQueue.async {
 
             let findDuplicatedItems = self.debugOutput
             
             // Diffing Items
             var itemDiffs = [Int: ComparisonResult]()
-            for (oldSectionIndex, oldSection) in oldSections.enumerate() {
+            for (oldSectionIndex, oldSection) in oldSections.enumerated() {
                 
-                let newIndex = newSections.indexOf({ newSection -> Bool in
+                let newIndex = newSections.index(where: { newSection -> Bool in
                     let comparisonLevel = newSection.compareTo(oldSection)
                     return comparisonLevel.isSame
                 })
@@ -103,7 +103,7 @@ class UBRDeltaContent {
                     itemDiffs[oldSectionIndex] = itemDiff
                     
                     if findDuplicatedItems {
-                        if let duplicatedIndexes = itemDiff.duplicatedIndexes where duplicatedIndexes.count > 0 {
+                        if let duplicatedIndexes = itemDiff.duplicatedIndexes , duplicatedIndexes.count > 0 {
                             print("\n")
                             print("WARNING: Duplicated items detected. App will probably crash.")
                             print("Dublicated indexes:", duplicatedIndexes)
@@ -123,7 +123,7 @@ class UBRDeltaContent {
             let sectionDiff = UBRDelta.diff(old: oldSectionAsItems, new: newSectionsAsItems, findDuplicatedItems: findDuplicatedItems)
             
             if findDuplicatedItems {
-                if let duplicatedIndexes = sectionDiff.duplicatedIndexes where duplicatedIndexes.count > 0 {
+                if let duplicatedIndexes = sectionDiff.duplicatedIndexes , duplicatedIndexes.count > 0 {
                     print("\n")
                     print("WARNING: Duplicated section items detected. App will probably crash.")
                     print("Dublicated indexes:", duplicatedIndexes)
@@ -133,8 +133,8 @@ class UBRDeltaContent {
             }
 
             // Diffing is done - doing UI updates on the main thread
-            let mainQueue = dispatch_get_main_queue()
-            dispatch_async(mainQueue) {
+            let mainQueue = DispatchQueue.main
+            mainQueue.async {
                 
                 // Guardings
                 if self.resultIsOutOfDate == true {
@@ -167,17 +167,17 @@ class UBRDeltaContent {
                 
                 // Item update for the old section order, because the sections
                 // are not moved yet
-                for (oldSectionIndex, itemDiff) in itemDiffs.sort({ $0.0 < $1.0 }) {
+                for (oldSectionIndex, itemDiff) in itemDiffs.sorted(by: { $0.0 < $1.0 }) {
                     
                     // Call item handler functions
                     self.itemUpdate?(
-                        items: itemDiff.unmovedItems,
-                        section: oldSectionIndex,
-                        insertIndexPaths: itemDiff.insertionIndexes,
-                        reloadIndexPaths: itemDiff.reloadIndexMap,
-                        deleteIndexPaths: itemDiff.deletionIndexes
+                        itemDiff.unmovedItems,
+                        oldSectionIndex,
+                        itemDiff.insertionIndexes,
+                        itemDiff.reloadIndexMap,
+                        itemDiff.deletionIndexes
                     )
-                    self.itemReorder?(items: itemDiff.newItems, section: oldSectionIndex, reorderMap: itemDiff.moveIndexMap)
+                    self.itemReorder?(itemDiff.newItems, oldSectionIndex, itemDiff.moveIndexMap)
                     
                 }
                 
@@ -187,14 +187,14 @@ class UBRDeltaContent {
                 let reorderItems = sectionDiff.newItems.map({ $0 as! ComparableSectionItem })
                 
                 // Call section handler functions
-                self.sectionUpdate?(sections: updateItems, insertIndexSet: sectionDiff.insertionIndexes, reloadIndexSet: sectionDiff.reloadIndexMap, deleteIndexSet: sectionDiff.deletionIndexes)
-                self.sectionReorder?(sections: reorderItems, reorderMap: sectionDiff.moveIndexMap)
+                self.sectionUpdate?(updateItems, sectionDiff.insertionIndexes, sectionDiff.reloadIndexMap, sectionDiff.deletionIndexes)
+                self.sectionReorder?(reorderItems, sectionDiff.moveIndexMap)
                 
                 // Call completion block
                 self.completion?()
                 
                 // Reset state
-                self.lastUpdateTime = NSDate()
+                self.lastUpdateTime = Date()
                 self.oldSections = nil
                 self.newSections = nil
                 self.isDiffing = false
@@ -205,13 +205,13 @@ class UBRDeltaContent {
     }
     
     
-    static private func executeDelayed(time: Int, action: () -> ())
+    static fileprivate func executeDelayed(_ time: Int, action: @escaping () -> ())
     {
         self.executeDelayed(Double(time), action: action)
     }
     
     
-    static private func executeDelayed(time: Double, action: () -> ())
+    static fileprivate func executeDelayed(_ time: Double, action: @escaping () -> ())
     {
         if time == 0 {
             action()
@@ -219,8 +219,8 @@ class UBRDeltaContent {
         }
         
         let nanoSeconds: Int64 = Int64(Double(NSEC_PER_SEC) * time);
-        let when = dispatch_time(DISPATCH_TIME_NOW, nanoSeconds)
-        dispatch_after(when, dispatch_get_main_queue(), {
+        let when = DispatchTime.now() + Double(nanoSeconds) / Double(NSEC_PER_SEC)
+        DispatchQueue.main.asyncAfter(deadline: when, execute: {
             action()
         })
     }

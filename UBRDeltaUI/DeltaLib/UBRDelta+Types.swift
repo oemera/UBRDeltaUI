@@ -13,14 +13,14 @@ public typealias ComparisonChanges = [String:Bool]
 
 public enum ComparisonLevel {
     
-    case Same, Different, Changed(ComparisonChanges)
+    case same, different, changed(ComparisonChanges)
     
     var isSame: Bool {
-        return self != .Different
+        return self != .different
     }
     
     var isChanged: Bool {
-        return self != .Different && self != .Same
+        return self != .different && self != .same
     }
 }
 
@@ -29,11 +29,11 @@ extension ComparisonLevel : Equatable { }
 
 public func ==(lhs: ComparisonLevel, rhs: ComparisonLevel) -> Bool {
     switch (lhs, rhs) {
-    case (.Different, .Different) :
+    case (.different, .different) :
         return true
-    case (.Same, .Same) :
+    case (.same, .same) :
         return true
-    case (.Changed(let a), .Changed(let b)) :
+    case (.changed(let a), .changed(let b)) :
         return a == b
     default :
         return false
@@ -52,11 +52,11 @@ extension ComparisonLevel {
      let valueDidChange = comparison.propertyDidChange("value")
      ```
      */
-    public func propertyDidChange(property: String) -> Bool {
+    public func propertyDidChange(_ property: String) -> Bool {
         switch self {
-        case .Same :
+        case .same :
             return false
-        case .Changed(let changes) :
+        case .changed(let changes) :
             return changes[property] ?? true
         default :
             return true
@@ -120,7 +120,7 @@ struct DeltaMatrix<T> {
     
     init() {}
     
-    mutating func removeAll(keepCapicity: Bool) {
-        rows.removeAll(keepCapacity: keepCapicity)
+    mutating func removeAll(_ keepCapicity: Bool) {
+        rows.removeAll(keepingCapacity: keepCapicity)
     }
 }

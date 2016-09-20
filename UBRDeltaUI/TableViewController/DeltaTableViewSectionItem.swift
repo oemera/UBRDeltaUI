@@ -26,24 +26,24 @@ public struct DeltaTableViewSectionItem : ComparableSectionItem {
     }
     
     
-    public func compareTo(other: ComparableItem) -> ComparisonLevel {
-        guard let other = other as? DeltaTableViewSectionItem else { return .Different }
-        guard other.id == self.id else { return .Different }
+    public func compareTo(_ other: ComparableItem) -> ComparisonLevel {
+        guard let other = other as? DeltaTableViewSectionItem else { return .different }
+        guard other.id == self.id else { return .different }
         
         var headerItemChanged = (headerItem == nil) != (other.headerItem == nil)
-        if let headerItem = headerItem, otherheaderItem = other.headerItem {
-            headerItemChanged = headerItem.compareTo(otherheaderItem) != .Same
+        if let headerItem = headerItem, let otherheaderItem = other.headerItem {
+            headerItemChanged = headerItem.compareTo(otherheaderItem) != .same
         }
 
         var footerItemChanged = (footerItem == nil) != (other.footerItem == nil)
-        if let footerItem = footerItem, otherFooterItem = other.footerItem {
-            footerItemChanged = footerItem.compareTo(otherFooterItem) != .Same
+        if let footerItem = footerItem, let otherFooterItem = other.footerItem {
+            footerItemChanged = footerItem.compareTo(otherFooterItem) != .same
         }
         
         if  headerItemChanged || footerItemChanged {
-            return .Changed(["headerItem": headerItemChanged, "footerItem": footerItemChanged])
+            return .changed(["headerItem": headerItemChanged, "footerItem": footerItemChanged])
         } else {
-            return .Same
+            return .same
         }
     }
 }

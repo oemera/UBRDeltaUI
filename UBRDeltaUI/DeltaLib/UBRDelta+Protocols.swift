@@ -19,7 +19,7 @@ public protocol ComparableItem {
     
     /// Implement this function to determine how two instances relate to another
     /// Are they the same, same but with changed data or completly differtent
-    func compareTo(other: ComparableItem) -> ComparisonLevel
+    func compareTo(_ other: ComparableItem) -> ComparisonLevel
     
 }
 
@@ -29,13 +29,13 @@ public extension ComparableItem {
     /// Determines if a property of an item changed compared to another by calling `compareTo(other:)`
     /// The default returned value is `true` if `other` is nil, the result of compareTo is `.Different`
     /// or the property is missed in the dict of `.Changed`
-    func comparedTo(other: ComparableItem?, didPropertyChange property: String) -> Bool {
+    func comparedTo(_ other: ComparableItem?, didPropertyChange property: String) -> Bool {
         guard let other = other else { return true }
         let comparisonLevel = self.compareTo(other)
         switch comparisonLevel {
-        case .Same :
+        case .same :
             return false
-        case .Changed(let changes) :
+        case .changed(let changes) :
             return changes[property] ?? true
         default :
             return true
@@ -43,8 +43,8 @@ public extension ComparableItem {
     }
 
     /// Convenience function that allows you to compare against an optional item
-    func compareTo(other: ComparableItem?) -> ComparisonLevel {
-        guard let other = other else { return ComparisonLevel.Different }
+    func compareTo(_ other: ComparableItem?) -> ComparisonLevel {
+        guard let other = other else { return ComparisonLevel.different }
         return self.compareTo(other)
     }
 }

@@ -30,7 +30,7 @@ public struct UBRDelta {
         // Test
         if findDuplicatedItems {
             var uniqueIndexes = Set<Int>()
-            for (newIndex, newItem) in newItems.enumerate() {
+            for (newIndex, newItem) in newItems.enumerated() {
                 let newId = newItem.uniqueIdentifier
                 if uniqueIndexes.contains(newId) {
                     duplicatedIndexes?.append(newIndex)
@@ -41,7 +41,7 @@ public struct UBRDelta {
         }
         
         // Prepare mapping vars for new items
-        for (newIndex, newItem) in newItems.enumerate() {
+        for (newIndex, newItem) in newItems.enumerated() {
             let newId = newItem.uniqueIdentifier
             newIDs.append(newId)
             newIDMap[newId] = newIndex
@@ -50,7 +50,7 @@ public struct UBRDelta {
         // - Prepare mapping vars for old items
         // - Create the unmoved array
         // - Search for deletions
-        for (oldIndex, oldItem) in oldItems.enumerate() {
+        for (oldIndex, oldItem) in oldItems.enumerated() {
             let id = oldItem.uniqueIdentifier
             oldIDMap[id] = oldIndex
             if let newIndex = newIDMap[id] {
@@ -63,7 +63,7 @@ public struct UBRDelta {
         }
         
         // Search for insertions and updates
-        for (newIndex, newItem) in newItems.enumerate() {
+        for (newIndex, newItem) in newItems.enumerated() {
             // Looking for changes
             let id = newItem.uniqueIdentifier
             if let oldIndex = oldIDMap[id] {
@@ -75,13 +75,13 @@ public struct UBRDelta {
             } else {
                 // Found insertion
                 insertionIndexes.append(newIndex)
-                unmovedItems.insert(newItem, atIndex: newIndex)
-                unmIDs.insert(id, atIndex: newIndex)
+                unmovedItems.insert(newItem, at: newIndex)
+                unmIDs.insert(id, at: newIndex)
             }
         }
         
         // Reload
-        for (unmIndex, unmItem) in unmovedItems.enumerate() {
+        for (unmIndex, unmItem) in unmovedItems.enumerated() {
             let id = unmItem.uniqueIdentifier
             if reloadIDs.contains(id) {
                 let oldIndex = oldIDMap[id]!
@@ -93,7 +93,7 @@ public struct UBRDelta {
         let diffResult = DiffArray<Int>.diff(unmIDs, newIDs)
         for diffStep in diffResult.results {
             switch diffStep {
-            case .Delete(let unmIndex, let id) :
+            case .delete(let unmIndex, let id) :
                 let newIndex = newIDMap[id]!
                 moveIndexMap[unmIndex] = newIndex
             default :
